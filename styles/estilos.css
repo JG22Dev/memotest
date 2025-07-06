@@ -16,7 +16,9 @@ h2{
 
 header,
 main{
+    
     padding: 10px 40px;
+    background-color: pink;
 }
 
 header{
@@ -26,7 +28,11 @@ header{
     background-color: #20bf55;
     background-image: linear-gradient(315deg, #20bf55 0%, #01baef 74%);
 }
-header a{
+
+a{
+    
+    align-items: center;
+    
     text-decoration: none;
     padding: 6px 20px;
     background: white;
@@ -34,6 +40,10 @@ header a{
     border-radius: 5px;
 }
 
+main{
+    background: #f7f7f7;
+    min-height: 70vh ;
+}
 
 ul{
     display: flex;
@@ -41,7 +51,6 @@ ul{
     list-style: none;
     padding: 0;
     justify-content: space-between;
-    width: 1000px;
     margin: 40px auto;
 }
 
@@ -51,7 +60,7 @@ ul li{
 }
 
 ul li img{
-    height: 150px;
+    height: 200px;
     transform: rotateY(0deg);
     transition: .2s;
     backface-visibility: hidden;
@@ -76,7 +85,7 @@ ul li.seleccionado img + img{
 }
 
 footer{
-    height: 500px;
+    height: 100px;
     background: #222;
     color: white;
     padding: 0 40px;
@@ -124,6 +133,6 @@ body.noscroll{
 #modal div{
     background: white;
     padding: 20px 50px;
-    width: 60vw;
+    width: 70vw;
     box-sizing: border-box;
 }
