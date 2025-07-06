@@ -64,8 +64,8 @@ function iniciarJuego( ){
             }
 
         } });
-        const img1 = d.create('img', { src: 'c/back.png' } );
-        const img2 = d.create('img',{ src: `c/${i}` });
+        const img1 = d.create('img', { src: '../cardIrab/back.png' } );
+        const img2 = d.create('img',{ src: `../cardIrab/${i}` });
         
         d.append( [img1, img2], li );
         d.append( li, tablero );
