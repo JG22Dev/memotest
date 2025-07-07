@@ -24,51 +24,41 @@ btnVolver.addEventListener('click', (e) => {
 });
 
 function mostrarModalInicio() {
-  const modal = d.create('div', { id: 'modal' });
-  const contenedor = d.create('div');
+  Swal.fire({
+    title: '¡Bienvenido al juego!',
+    html: `
+      <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
+      <br><br><label for="sliderPares">Cantidad de pares de cartas: <span id="sliderValor">4</span></label>
+      <input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'Comenzar',
+    preConfirm: () => {
+      const nombre = document.getElementById('inputNombre').value.trim();
+      const pares = parseInt(document.getElementById('sliderPares').value);
 
-  const titulo = d.create('h2', { innerHTML: '¡Bienvenido al juego!' });
+      if (!nombre || nombre.length < 3) {
+        Swal.showValidationMessage('El nombre debe tener al menos 3 letras.');
+        return false;
+      }
+      if (nombre.length > 30) {
+        Swal.showValidationMessage('El nombre no puede superar los 30 caracteres.');
+        return false;
+      }
 
-  const labelNombre = d.create('label', { innerHTML: 'Ingresá tu nombre:' });
-  const inputNombre = d.create('input', { type: 'text', id: 'nombreJugador', required: true });
-
-  const labelSlider = d.create('label', { innerHTML: 'Seleccioná cantidad de pares: <span id="valorSlider">4</span>' });
-  const slider = d.create('input', { type: 'range', id: 'sliderPares', min: 2, max: 8, value: 4 });
-
-  const comenzar = d.create('a', {
-  href: 'javascript:void(0)',
-  innerHTML: 'Comenzar',
-  className: 'cerrar-modal',
-  onclick: () => {
-    const nombre = inputNombre.value.trim();
-
-    // Validaciones
-    if (nombre.length < 3) {
-      alert('El nombre debe tener al menos 3 caracteres.');
-      return;
+      return { nombre, pares };
     }
-
-    if (nombre.length > 30) {
-      alert('El nombre no puede superar los 30 caracteres.');
-      return;
+  }).then((result) => {
+    if (result.isConfirmed) {
+      nombreJugador = result.value.nombre;
+      totalPares = result.value.pares;
+      iniciarJuego();
     }
-
-    nombreJugador = nombre;
-    totalPares = parseInt(slider.value);
-    modal.remove();
-    iniciarJuego();
-  }
-});
-
-
-  slider.addEventListener('input', () => {
-    d.query('#valorSlider').innerText = slider.value;
   });
-
-  d.append([titulo, labelNombre, inputNombre, labelSlider, slider, comenzar], contenedor);
-  d.append(contenedor, modal);
-  d.append(modal);
 }
+
+
 
 function iniciarJuego() {
   tablero.innerHTML = '';
@@ -158,7 +148,7 @@ function iniciarJuego() {
 
     const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
 
-    const img1 = d.create('img', { src: '../cardVacunas/tapada.png' });
+    const img1 = d.create('img', { src: '../cardvacunas/tapada.png' });
     const img2 = d.create('img', {
       src: `../cardVacunas/${carpeta}/${carta.nombre}`,
       style: 'visibility: hidden; position: absolute; top: 0; left: 0;'
@@ -175,32 +165,36 @@ function gameOver() {
   const h2 = d.create('h2', { innerHTML: `🎉 ¡Ganaste, ${nombreJugador}!` });
   const p = d.create('p', { innerHTML: `Lo hiciste en ${intentos} intentos.` });
   const cerrar = d.create('a', {
-    href: 'javascript:void(0)',
-    innerHTML: 'Cerrar',
-    onclick: () => {
-      modal.remove();
-      btnIniciar.disabled = false;
-      btnIniciar.innerText = 'Iniciar Juego';
-    },
-    className: 'cerrar-modal'
-  });
+  href: 'javascript:void(0)',
+  innerHTML: 'Volver a jugar',
+  onclick: () => {
+    modal.remove();
+    nombreJugador = ''; // resetear nombre para que se pida otra vez
+    btnIniciar.disabled = false;
+    btnIniciar.innerText = 'Iniciar Juego';
+  },
+  className: 'cerrar-modal'
+});
   d.append([h2, p, cerrar], cont);
   d.append(cont, modal);
   d.append(modal);
 }
 
 function mostrarModalVolver() {
-  const modal = d.create('div', { id: 'modal' });
-  const cont = d.create('div');
-
-  const h2 = d.create('h2', { innerHTML: '¿Estás seguro?' });
-  const p = d.create('p', { innerHTML: 'Si volvés al inicio se perderá la partida actual.' });
-
-  const btnSi = d.create('a', {
-    href: '../index.html',
-    innerHTML: 'Sí, volver',
-    className: 'cerrar-modal'
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Si volvés al inicio perderás el progreso actual.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, volver',
+    cancelButtonText: 'No, seguir jugando'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = '../index.html';
+    }
   });
+}
+
 
   const btnNo = d.create('a', {
     href: 'javascript:void(0)',
@@ -212,4 +206,4 @@ function mostrarModalVolver() {
   d.append([h2, p, btnSi, btnNo], cont);
   d.append(cont, modal);
   d.append(modal);
-}
+

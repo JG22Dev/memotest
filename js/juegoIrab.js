@@ -29,7 +29,7 @@ function mostrarModalInicio() {
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
       <br><br><label for="sliderPares">Cantidad de pares de cartas: <span id="sliderValor">4</span></label>
-      <input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
+      <br><input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
     `,
     focusConfirm: false,
     showCancelButton: true,
