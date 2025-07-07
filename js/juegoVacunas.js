@@ -27,11 +27,11 @@ btnVolver.addEventListener('click', (e) => {
 // MODAL de SweetAlert para nombre y pares
 function mostrarModalInicio() {
   Swal.fire({
-    title: 'Configuración del juego',
+    title: 'Bienvenido al juego',
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
-      <label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
-      <input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
+      <br><br><label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
+      <br><input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
     `,
     focusConfirm: false,
     showCancelButton: true,
@@ -213,7 +213,7 @@ function gameOver() {
     icon: 'success',
     showCancelButton: true,
     confirmButtonText: 'Volver a jugar',
-    cancelButtonText: 'Cambiar nombre'
+    cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
       iniciarJuego(); // mismo nombre
