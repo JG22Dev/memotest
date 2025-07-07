@@ -117,22 +117,42 @@ footer span{
 body.noscroll{
     overflow: hidden;
 }
-
-#modal{
-    background:rgba(0,0,0,0.8);
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    justify-content: center;
-    align-items: center;
+#modal {
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-#modal div{
-    background: white;
-    padding: 20px 50px;
-    width: 70vw;
-    box-sizing: border-box;
+#modal div {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
+
+#modal input[type="text"] {
+  width: 80%;
+  padding: 8px;
+  margin: 10px 0;
+}
+
+#modal input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.cerrar-modal {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 8px 20px;
+  background: #01baef;
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
 }
