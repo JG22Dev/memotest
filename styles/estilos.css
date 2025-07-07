@@ -54,28 +54,29 @@ main ul {
     padding: 10px;
     justify-content: center;
 }
-
 main ul li {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 3 / 4; /* rectangular estilo naipe */
-    overflow: hidden;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    cursor: pointer;
-    background-color: white;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4; /* forma de carta real */
+  overflow: hidden;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  background-color: white;
 }
 
 main ul li img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: 0.5s;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: none !important; /* 🔒 esto anula cualquier flip heredado */
+  backface-visibility: hidden;
 }
+
 
 
 ul li img + img{

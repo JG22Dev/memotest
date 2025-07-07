@@ -2,7 +2,6 @@ const d = new DOM();
 const btnIniciar = d.id('iniciar');
 const btnVolver = d.id('volver');
 const tablero = d.query('main ul');
-const body = document.body;
 
 let nombreJugador = '';
 let intentos = 0;
@@ -14,7 +13,9 @@ let cronometro = null;
 
 btnIniciar.addEventListener('click', () => {
   if (!nombreJugador) {
-    mostrarModalInicio();
+    mostrarModalInicio(); // primer inicio
+  } else {
+    iniciarJuego(); // reinicio con el mismo nombre
   }
 });
 
@@ -23,12 +24,13 @@ btnVolver.addEventListener('click', (e) => {
   mostrarModalVolver();
 });
 
+// MODAL de SweetAlert para nombre y pares
 function mostrarModalInicio() {
   Swal.fire({
-    title: '¡Bienvenido al juego!',
+    title: 'Configuración del juego',
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
-      <br><br><label for="sliderPares">Cantidad de pares de cartas: <span id="sliderValor">4</span></label>
+      <label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
       <input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
     `,
     focusConfirm: false,
@@ -58,25 +60,33 @@ function mostrarModalInicio() {
   });
 }
 
+// MODAL para volver atrás
+function mostrarModalVolver() {
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Si volvés al inicio perderás el progreso actual.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, volver',
+    cancelButtonText: 'No, seguir jugando'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = '../index.html';
+    }
+  });
+}
 
-
+// FUNCIÓN PRINCIPAL DEL JUEGO
 function iniciarJuego() {
   tablero.innerHTML = '';
   intentos = 0;
   tiempo = 0;
   seleccionadas = [];
-  active = true;
+  active = false;
   clearInterval(cronometro);
 
   btnIniciar.disabled = true;
   btnIniciar.innerText = `${nombreJugador} vas 0 intentos en 0s`;
-
-  cronometro = setInterval(() => {
-    tiempo++;
-    const minutos = Math.floor(tiempo / 60);
-    const segundos = tiempo % 60;
-    btnIniciar.innerText = `${nombreJugador} vas ${intentos} intentos en ${minutos}m ${segundos}s`;
-  }, 1000);
 
   const cartas = [];
 
@@ -89,19 +99,55 @@ function iniciarJuego() {
 
   let flipped = '';
   let flippedElem = null;
+  const cartasLi = [];
 
   cartas.forEach((carta) => {
-    const li = d.create('li', {
-      onclick: () => {
+    const li = document.createElement('li');
+    const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
+
+    // Imagen real (destapada al inicio)
+    const imgReal = document.createElement('img');
+    imgReal.src = `../cardVacunas/${carpeta}/${carta.nombre}`;
+    imgReal.style.position = 'absolute';
+    imgReal.style.top = '0';
+    imgReal.style.left = '0';
+    imgReal.style.width = '100%';
+    imgReal.style.height = '100%';
+    imgReal.style.objectFit = 'cover';
+    imgReal.style.visibility = 'visible';
+
+    // Imagen tapada (oculta al principio)
+    const imgTapada = document.createElement('img');
+    imgTapada.src = '../cardVacunas/tapada.png';
+    imgTapada.style.position = 'absolute';
+    imgTapada.style.top = '0';
+    imgTapada.style.left = '0';
+    imgTapada.style.width = '100%';
+    imgTapada.style.height = '100%';
+    imgTapada.style.objectFit = 'cover';
+    imgTapada.style.visibility = 'hidden';
+
+    li.appendChild(imgTapada);
+    li.appendChild(imgReal);
+    tablero.appendChild(li);
+
+    cartasLi.push({ li, imgTapada, imgReal, carta });
+  });
+
+  // Después de 3 segundos, tapar y activar juego
+  setTimeout(() => {
+    cartasLi.forEach(({ li, imgTapada, imgReal, carta }) => {
+      imgReal.style.visibility = 'hidden';
+      imgTapada.style.visibility = 'visible';
+
+      li.onclick = () => {
         if (!active || li.classList.contains('fija') || li.classList.contains('seleccionado')) return;
 
         active = false;
         li.classList.add('seleccionado');
 
-        const img1 = li.querySelector('img:first-child');
-        const img2 = li.querySelector('img:last-child');
-        img1.style.visibility = 'hidden';
-        img2.style.visibility = 'visible';
+        imgTapada.style.visibility = 'hidden';
+        imgReal.style.visibility = 'visible';
 
         if (!flipped) {
           flipped = carta.nombre;
@@ -130,11 +176,13 @@ function iniciarJuego() {
             active = true;
           } else {
             setTimeout(() => {
-              img1.style.visibility = 'visible';
-              img2.style.visibility = 'hidden';
+              imgTapada.style.visibility = 'visible';
+              imgReal.style.visibility = 'hidden';
+
               const imgBack = flippedElem.querySelector('img:last-child');
               imgBack.style.visibility = 'hidden';
               flippedElem.querySelector('img:first-child').style.visibility = 'visible';
+
               flippedElem.classList.remove('seleccionado');
               li.classList.remove('seleccionado');
               flipped = '';
@@ -143,67 +191,36 @@ function iniciarJuego() {
             }, 1000);
           }
         }
-      }
+      };
     });
 
-    const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
-
-    const img1 = d.create('img', { src: '../cardvacunas/tapada.png' });
-    const img2 = d.create('img', {
-      src: `../cardVacunas/${carpeta}/${carta.nombre}`,
-      style: 'visibility: hidden; position: absolute; top: 0; left: 0;'
-    });
-
-    d.append([img1, img2], li);
-    d.append(li, tablero);
-  });
+    // Activar clicks y cronómetro
+    active = true;
+    cronometro = setInterval(() => {
+      tiempo++;
+      const minutos = Math.floor(tiempo / 60);
+      const segundos = tiempo % 60;
+      btnIniciar.innerText = `${nombreJugador} vas ${intentos} intentos en ${minutos}m ${segundos}s`;
+    }, 1000);
+  }, 3000);
 }
 
+// MODAL final
 function gameOver() {
-  const modal = d.create('div', { id: 'modal' });
-  const cont = d.create('div');
-  const h2 = d.create('h2', { innerHTML: `🎉 ¡Ganaste, ${nombreJugador}!` });
-  const p = d.create('p', { innerHTML: `Lo hiciste en ${intentos} intentos.` });
-  const cerrar = d.create('a', {
-  href: 'javascript:void(0)',
-  innerHTML: 'Volver a jugar',
-  onclick: () => {
-    modal.remove();
-    nombreJugador = ''; // resetear nombre para que se pida otra vez
-    btnIniciar.disabled = false;
-    btnIniciar.innerText = 'Iniciar Juego';
-  },
-  className: 'cerrar-modal'
-});
-  d.append([h2, p, cerrar], cont);
-  d.append(cont, modal);
-  d.append(modal);
-}
-
-function mostrarModalVolver() {
   Swal.fire({
-    title: '¿Estás seguro?',
-    text: 'Si volvés al inicio perderás el progreso actual.',
-    icon: 'warning',
+    title: `🎉 ¡Ganaste, ${nombreJugador}!`,
+    text: `Lo hiciste en ${intentos} intentos.`,
+    icon: 'success',
     showCancelButton: true,
-    confirmButtonText: 'Sí, volver',
-    cancelButtonText: 'No, seguir jugando'
+    confirmButtonText: 'Volver a jugar',
+    cancelButtonText: 'Cambiar nombre'
   }).then((result) => {
     if (result.isConfirmed) {
-      window.location.href = '../index.html';
+      iniciarJuego(); // mismo nombre
+    } else {
+      nombreJugador = '';
+      btnIniciar.disabled = false;
+      btnIniciar.innerText = 'Iniciar Juego';
     }
   });
 }
-
-
-  const btnNo = d.create('a', {
-    href: 'javascript:void(0)',
-    innerHTML: 'No, seguir jugando',
-    onclick: () => modal.remove(),
-    className: 'cerrar-modal'
-  });
-
-  d.append([h2, p, btnSi, btnNo], cont);
-  d.append(cont, modal);
-  d.append(modal);
-
