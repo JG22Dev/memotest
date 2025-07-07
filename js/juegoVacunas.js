@@ -10,12 +10,21 @@ let seleccionadas = [];
 let active = true;
 let tiempo = 0;
 let cronometro = null;
+let juegoEnCurso = false; // 🛡 bloqueo para evitar múltiples inicios
 
 btnIniciar.addEventListener('click', () => {
+  if (juegoEnCurso) return; // 🛑 si ya se está iniciando, no hacer nada
+
+  juegoEnCurso = true;
+  btnIniciar.disabled = true;
+
   if (!nombreJugador) {
-    mostrarModalInicio(); // primer inicio
+    mostrarModalInicio(() => {
+      btnIniciar.disabled = false;
+      juegoEnCurso = false;
+    });
   } else {
-    iniciarJuego(); // reinicio con el mismo nombre
+    iniciarJuego();
   }
 });
 
@@ -24,14 +33,14 @@ btnVolver.addEventListener('click', (e) => {
   mostrarModalVolver();
 });
 
-// MODAL de SweetAlert para nombre y pares
-function mostrarModalInicio() {
+// MODAL de configuración inicial
+function mostrarModalInicio(onCancel) {
   Swal.fire({
-    title: 'Bienvenido al juego',
+    title: 'Configuración del juego',
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
-      <br><br><label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
-      <br><input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
+      <label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
+      <input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
     `,
     focusConfirm: false,
     showCancelButton: true,
@@ -56,11 +65,15 @@ function mostrarModalInicio() {
       nombreJugador = result.value.nombre;
       totalPares = result.value.pares;
       iniciarJuego();
+    } else {
+      if (typeof onCancel === 'function') {
+        onCancel(); // 🔓 se canceló, reactivar botón
+      }
     }
   });
 }
 
-// MODAL para volver atrás
+// MODAL para volver
 function mostrarModalVolver() {
   Swal.fire({
     title: '¿Estás seguro?',
@@ -76,7 +89,7 @@ function mostrarModalVolver() {
   });
 }
 
-// FUNCIÓN PRINCIPAL DEL JUEGO
+// INICIAR JUEGO
 function iniciarJuego() {
   tablero.innerHTML = '';
   intentos = 0;
@@ -84,6 +97,7 @@ function iniciarJuego() {
   seleccionadas = [];
   active = false;
   clearInterval(cronometro);
+  cronometro = null;
 
   btnIniciar.disabled = true;
   btnIniciar.innerText = `${nombreJugador} vas 0 intentos en 0s`;
@@ -105,27 +119,25 @@ function iniciarJuego() {
     const li = document.createElement('li');
     const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
 
-    // Imagen real (destapada al inicio)
     const imgReal = document.createElement('img');
     imgReal.src = `../cardVacunas/${carpeta}/${carta.nombre}`;
-    imgReal.style.position = 'absolute';
-    imgReal.style.top = '0';
-    imgReal.style.left = '0';
-    imgReal.style.width = '100%';
-    imgReal.style.height = '100%';
-    imgReal.style.objectFit = 'cover';
-    imgReal.style.visibility = 'visible';
+    Object.assign(imgReal.style, {
+      position: 'absolute',
+      top: '0', left: '0',
+      width: '100%', height: '100%',
+      objectFit: 'cover',
+      visibility: 'visible'
+    });
 
-    // Imagen tapada (oculta al principio)
     const imgTapada = document.createElement('img');
     imgTapada.src = '../cardVacunas/tapada.png';
-    imgTapada.style.position = 'absolute';
-    imgTapada.style.top = '0';
-    imgTapada.style.left = '0';
-    imgTapada.style.width = '100%';
-    imgTapada.style.height = '100%';
-    imgTapada.style.objectFit = 'cover';
-    imgTapada.style.visibility = 'hidden';
+    Object.assign(imgTapada.style, {
+      position: 'absolute',
+      top: '0', left: '0',
+      width: '100%', height: '100%',
+      objectFit: 'cover',
+      visibility: 'hidden'
+    });
 
     li.appendChild(imgTapada);
     li.appendChild(imgReal);
@@ -134,7 +146,7 @@ function iniciarJuego() {
     cartasLi.push({ li, imgTapada, imgReal, carta });
   });
 
-  // Después de 3 segundos, tapar y activar juego
+  // MOSTRAR CARTAS DURANTE 3 SEGUNDOS
   setTimeout(() => {
     cartasLi.forEach(({ li, imgTapada, imgReal, carta }) => {
       imgReal.style.visibility = 'hidden';
@@ -194,7 +206,7 @@ function iniciarJuego() {
       };
     });
 
-    // Activar clicks y cronómetro
+    // Activar juego y cronómetro
     active = true;
     cronometro = setInterval(() => {
       tiempo++;
@@ -205,7 +217,7 @@ function iniciarJuego() {
   }, 3000);
 }
 
-// MODAL final
+// MODAL FINAL
 function gameOver() {
   Swal.fire({
     title: `🎉 ¡Ganaste, ${nombreJugador}!`,
@@ -213,10 +225,12 @@ function gameOver() {
     icon: 'success',
     showCancelButton: true,
     confirmButtonText: 'Volver a jugar',
-    cancelButtonText: 'Cancelar'
+    cancelButtonText: 'Cambiar nombre'
   }).then((result) => {
+    juegoEnCurso = false;
+
     if (result.isConfirmed) {
-      iniciarJuego(); // mismo nombre
+      iniciarJuego();
     } else {
       nombreJugador = '';
       btnIniciar.disabled = false;
@@ -224,3 +238,25 @@ function gameOver() {
     }
   });
 }
+
+/* 
+// 🔁 Alternar entre modo claro y oscuro
+const temaToggle = d.id('temaToggle');
+
+function aplicarTemaGuardado() {
+  const tema = localStorage.getItem('tema') || 'claro';
+  document.body.classList.toggle('tema-oscuro', tema === 'oscuro');
+  document.body.classList.toggle('tema-claro', tema === 'claro');
+  temaToggle.innerText = tema === 'oscuro' ? '☀️ Modo claro' : '🌙 Modo oscuro';
+}
+
+temaToggle.addEventListener('click', () => {
+  const esOscuro = document.body.classList.contains('tema-oscuro');
+  const nuevoTema = esOscuro ? 'claro' : 'oscuro';
+  localStorage.setItem('tema', nuevoTema);
+  aplicarTemaGuardado();
+});
+
+// ✅ Aplicar tema al cargar la página
+aplicarTemaGuardado();
+ */

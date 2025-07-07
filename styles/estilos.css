@@ -169,3 +169,26 @@ body.noscroll{
   border-radius: 5px;
   text-decoration: none;
 }
+
+/* 
+
+.tema-claro {
+  background-color: #f0f0f0;
+  color: #222;
+}
+
+.tema-claro main ul li {
+  background-color: #ffffff;
+}
+
+
+.tema-oscuro {
+  background-color: #121212;
+  color: #eee;
+}
+
+.tema-oscuro main ul li {
+  background-color: #1e1e1e;
+  border-color: #333;
+}
+ */
