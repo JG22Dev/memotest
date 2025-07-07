@@ -165,15 +165,16 @@ function gameOver() {
   const h2 = d.create('h2', { innerHTML: `🎉 ¡Ganaste, ${nombreJugador}!` });
   const p = d.create('p', { innerHTML: `Lo hiciste en ${intentos} intentos.` });
   const cerrar = d.create('a', {
-    href: 'javascript:void(0)',
-    innerHTML: 'Cerrar',
-    onclick: () => {
-      modal.remove();
-      btnIniciar.disabled = false;
-      btnIniciar.innerText = 'Iniciar Juego';
-    },
-    className: 'cerrar-modal'
-  });
+  href: 'javascript:void(0)',
+  innerHTML: 'Volver a jugar',
+  onclick: () => {
+    modal.remove();
+    nombreJugador = ''; // resetear nombre para que se pida otra vez
+    btnIniciar.disabled = false;
+    btnIniciar.innerText = 'Iniciar Juego';
+  },
+  className: 'cerrar-modal'
+});
   d.append([h2, p, cerrar], cont);
   d.append(cont, modal);
   d.append(modal);
