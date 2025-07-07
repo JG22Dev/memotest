@@ -42,27 +42,27 @@ a{
 
 main{
     background: #f7f7f7;
-    min-height: 70vh ;
+    min-height: 77vh ;
 }
 
 main ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 16px;
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 10px;
-    justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* Aumentás el mínimo */
+  gap: 16px;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 10px;
+  justify-content: center;
 }
+
 main ul li {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4; /* forma de carta real */
+  aspect-ratio: 3 / 4; /* Rectangular estilo carta */
   overflow: hidden;
   border-radius: 10px;
   border: 2px solid #ccc;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  cursor: pointer;
   background-color: white;
 }
 
@@ -98,12 +98,17 @@ ul li.seleccionado img + img{
 }
 
 footer{
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
     height: 100px;
     background: #222;
     color: white;
-    padding: 0 40px;
+    padding: 0 20px;
     text-align: center;
     border-top: 2px solid #111;
+    
 }
 
 footer span{
