@@ -2,7 +2,6 @@ const d = new DOM();
 const btnIniciar = d.id('iniciar');
 const btnVolver = d.id('volver');
 const tablero = d.query('main ul');
-const body = document.body;
 
 let nombreJugador = '';
 let intentos = 0;
@@ -11,10 +10,21 @@ let seleccionadas = [];
 let active = true;
 let tiempo = 0;
 let cronometro = null;
+let juegoEnCurso = false; // 🛡 bloqueo para evitar múltiples inicios
 
 btnIniciar.addEventListener('click', () => {
+  if (juegoEnCurso) return; // 🛑 si ya se está iniciando, no hacer nada
+
+  juegoEnCurso = true;
+  btnIniciar.disabled = true;
+
   if (!nombreJugador) {
-    mostrarModalInicio();
+    mostrarModalInicio(() => {
+      btnIniciar.disabled = false;
+      juegoEnCurso = false;
+    });
+  } else {
+    iniciarJuego();
   }
 });
 
@@ -23,12 +33,13 @@ btnVolver.addEventListener('click', (e) => {
   mostrarModalVolver();
 });
 
-function mostrarModalInicio() {
+// MODAL de configuración inicial
+function mostrarModalInicio(onCancel) {
   Swal.fire({
-    title: '¡Bienvenido al juego!',
+    title: 'Bienvenido al juego',
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
-      <br><br><label for="sliderPares">Cantidad de pares de cartas: <span id="sliderValor">4</span></label>
+      <br><br><label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
       <br><input type="range" id="sliderPares" min="2" max="8" value="4" oninput="document.getElementById('sliderValor').textContent = this.value">
     `,
     focusConfirm: false,
@@ -54,29 +65,42 @@ function mostrarModalInicio() {
       nombreJugador = result.value.nombre;
       totalPares = result.value.pares;
       iniciarJuego();
+    } else {
+      if (typeof onCancel === 'function') {
+        onCancel(); // 🔓 se canceló, reactivar botón
+      }
     }
   });
 }
 
+// MODAL para volver
+function mostrarModalVolver() {
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Si volvés al inicio perderás el progreso actual.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, volver',
+    cancelButtonText: 'No, seguir jugando'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = '../index.html';
+    }
+  });
+}
 
-
+// INICIAR JUEGO
 function iniciarJuego() {
   tablero.innerHTML = '';
   intentos = 0;
   tiempo = 0;
   seleccionadas = [];
-  active = true;
+  active = false;
   clearInterval(cronometro);
+  cronometro = null;
 
   btnIniciar.disabled = true;
   btnIniciar.innerText = `${nombreJugador} vas 0 intentos en 0s`;
-
-  cronometro = setInterval(() => {
-    tiempo++;
-    const minutos = Math.floor(tiempo / 60);
-    const segundos = tiempo % 60;
-    btnIniciar.innerText = `${nombreJugador} vas ${intentos} intentos en ${minutos}m ${segundos}s`;
-  }, 1000);
 
   const cartas = [];
 
@@ -89,19 +113,53 @@ function iniciarJuego() {
 
   let flipped = '';
   let flippedElem = null;
+  const cartasLi = [];
 
   cartas.forEach((carta) => {
-    const li = d.create('li', {
-      onclick: () => {
+    const li = document.createElement('li');
+    const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
+
+    const imgReal = document.createElement('img');
+    imgReal.src = `../cardIrab/${carpeta}/${carta.nombre}`;
+    Object.assign(imgReal.style, {
+      position: 'absolute',
+      top: '0', left: '0',
+      width: '100%', height: '100%',
+      objectFit: 'cover',
+      visibility: 'visible'
+    });
+
+    const imgTapada = document.createElement('img');
+    imgTapada.src = '../cardIrab/tapada.png';
+    Object.assign(imgTapada.style, {
+      position: 'absolute',
+      top: '0', left: '0',
+      width: '100%', height: '100%',
+      objectFit: 'cover',
+      visibility: 'hidden'
+    });
+
+    li.appendChild(imgTapada);
+    li.appendChild(imgReal);
+    tablero.appendChild(li);
+
+    cartasLi.push({ li, imgTapada, imgReal, carta });
+  });
+
+  // MOSTRAR CARTAS DURANTE 3 SEGUNDOS
+  setTimeout(() => {
+    cartasLi.forEach(({ li, imgTapada, imgReal, carta }) => {
+      imgReal.style.visibility = 'hidden';
+      imgTapada.style.visibility = 'visible';
+
+      li.onclick = () => {
         if (!active || li.classList.contains('fija') || li.classList.contains('seleccionado')) return;
 
         active = false;
         li.classList.add('seleccionado');
 
-        const img1 = li.querySelector('img:first-child');
-        const img2 = li.querySelector('img:last-child');
-        img1.style.visibility = 'hidden';
-        img2.style.visibility = 'visible';
+        imgTapada.style.visibility = 'hidden';
+        imgReal.style.visibility = 'visible';
 
         if (!flipped) {
           flipped = carta.nombre;
@@ -130,11 +188,13 @@ function iniciarJuego() {
             active = true;
           } else {
             setTimeout(() => {
-              img1.style.visibility = 'visible';
-              img2.style.visibility = 'hidden';
+              imgTapada.style.visibility = 'visible';
+              imgReal.style.visibility = 'hidden';
+
               const imgBack = flippedElem.querySelector('img:last-child');
               imgBack.style.visibility = 'hidden';
               flippedElem.querySelector('img:first-child').style.visibility = 'visible';
+
               flippedElem.classList.remove('seleccionado');
               li.classList.remove('seleccionado');
               flipped = '';
@@ -143,67 +203,38 @@ function iniciarJuego() {
             }, 1000);
           }
         }
-      }
+      };
     });
 
-    const carpeta = carta.tipo === 'pregunta' ? 'preguntas' : 'respuestas';
-
-    const img1 = d.create('img', { src: '../cardIrab/tapada.png' });
-    const img2 = d.create('img', {
-      src: `../cardIrab/${carpeta}/${carta.nombre}`,
-      style: 'visibility: hidden; position: absolute; top: 0; left: 0;'
-    });
-
-    d.append([img1, img2], li);
-    d.append(li, tablero);
-  });
+    // Activar juego y cronómetro
+    active = true;
+    cronometro = setInterval(() => {
+      tiempo++;
+      const minutos = Math.floor(tiempo / 60);
+      const segundos = tiempo % 60;
+      btnIniciar.innerText = `${nombreJugador} vas ${intentos} intentos en ${minutos}m ${segundos}s`;
+    }, 1000);
+  }, 3000);
 }
 
+// MODAL FINAL
 function gameOver() {
-  const modal = d.create('div', { id: 'modal' });
-  const cont = d.create('div');
-  const h2 = d.create('h2', { innerHTML: `🎉 ¡Ganaste, ${nombreJugador}!` });
-  const p = d.create('p', { innerHTML: `Lo hiciste en ${intentos} intentos.` });
-  const cerrar = d.create('a', {
-  href: 'javascript:void(0)',
-  innerHTML: 'Volver a jugar',
-  onclick: () => {
-    modal.remove();
-    nombreJugador = ''; // resetear nombre para que se pida otra vez
-    btnIniciar.disabled = false;
-    btnIniciar.innerText = 'Iniciar Juego';
-  },
-  className: 'cerrar-modal'
-});
-  d.append([h2, p, cerrar], cont);
-  d.append(cont, modal);
-  d.append(modal);
-}
-
-function mostrarModalVolver() {
   Swal.fire({
-    title: '¿Estás seguro?',
-    text: 'Si volvés al inicio perderás el progreso actual.',
-    icon: 'warning',
+    title: `🎉 ¡Ganaste, ${nombreJugador}!`,
+    text: `Lo hiciste en ${intentos} intentos.`,
+    icon: 'success',
     showCancelButton: true,
-    confirmButtonText: 'Sí, volver',
-    cancelButtonText: 'No, seguir jugando'
+    confirmButtonText: 'Volver a jugar',
+    cancelButtonText: 'Cancelar',
   }).then((result) => {
+    juegoEnCurso = false;
+
     if (result.isConfirmed) {
-      window.location.href = '../index.html';
+      iniciarJuego();
+    } else {
+      nombreJugador = '';
+      btnIniciar.disabled = false;
+      btnIniciar.innerText = 'Iniciar Juego';
     }
   });
 }
-
-
-  const btnNo = d.create('a', {
-    href: 'javascript:void(0)',
-    innerHTML: 'No, seguir jugando',
-    onclick: () => modal.remove(),
-    className: 'cerrar-modal'
-  });
-
-  d.append([h2, p, btnSi, btnNo], cont);
-  d.append(cont, modal);
-  d.append(modal);
-

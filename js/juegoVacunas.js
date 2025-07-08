@@ -36,7 +36,7 @@ btnVolver.addEventListener('click', (e) => {
 // MODAL de configuración inicial
 function mostrarModalInicio(onCancel) {
   Swal.fire({
-    title: 'Configuración del juego',
+    title: 'Bienvenido al juego',
     html: `
       <input id="inputNombre" class="swal2-input" placeholder="Tu nombre (mín 3 letras)" maxlength="30">
       <br><br><label for="sliderPares">Cantidad de pares: <span id="sliderValor">4</span></label>
@@ -225,7 +225,7 @@ function gameOver() {
     icon: 'success',
     showCancelButton: true,
     confirmButtonText: 'Volver a jugar',
-    cancelButtonText: 'Cambiar nombre'
+    cancelButtonText: 'Cancelar',
   }).then((result) => {
     juegoEnCurso = false;
 
